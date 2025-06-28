@@ -375,7 +375,7 @@ const CatGame: React.FC = () => {
 
   return (
     <div
-      className="relative w-full h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui overflow-hidden"
+      className="relative w-full h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Background clouds - multiple floating */}
