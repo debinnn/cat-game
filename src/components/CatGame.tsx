@@ -82,18 +82,18 @@ const CatGame: React.FC = () => {
   const [showToyNearCat, setShowToyNearCat] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPetting, setIsPetting] = useState(false);
-  const [bgClouds, setBgClouds] = useState([
+  const [bgClouds] = useState([
     { id: 1, left: "15%", top: "15%", speed: 25 },
     { id: 2, left: "75%", top: "25%", speed: 35 },
     { id: 3, left: "5%", top: "35%", speed: 30 },
     { id: 4, left: "85%", top: "45%", speed: 20 },
     { id: 5, left: "45%", top: "10%", speed: 28 },
   ]);
-  const [bgFlowers, setBgFlowers] = useState([
+  const [bgFlowers] = useState([
     { id: 1, left: "25%", top: "75%", type: "pink" },
     { id: 2, left: "80%", top: "65%", type: "yellow" },
   ]);
-  const [bgHearts, setBgHearts] = useState([
+  const [bgHearts] = useState([
     { id: 1, left: "10%", top: "20%", speed: 15, size: "small" },
     { id: 2, left: "90%", top: "30%", speed: 22, size: "medium" },
     { id: 3, left: "30%", top: "50%", speed: 18, size: "small" },
@@ -157,7 +157,7 @@ const CatGame: React.FC = () => {
       setStats((prev) => {
         if (Math.random() < 0.2) {
           // 20% chance every 2-4 hours
-          let happyBoost = Math.random() < 0.5 ? 10 : -10;
+          const happyBoost = Math.random() < 0.5 ? 10 : -10;
           return {
             ...prev,
             happiness: clamp(prev.happiness + happyBoost),
@@ -172,8 +172,8 @@ const CatGame: React.FC = () => {
   // Combo system: multiple quick interactions
   const handleCombo = () => {
     setStats((prev) => {
-      let now = Date.now();
-      let last = prev.lastInteraction;
+      const now = Date.now();
+      const last = prev.lastInteraction;
       if (now - last < 10000) {
         // 10s window
         return {
@@ -210,9 +210,9 @@ const CatGame: React.FC = () => {
     setShowToyNearCat(toy === "ball" ? "/assets/cat_toy_ball.png" : "/assets/cat_toy_mouse.png");
     
     setStats((prev) => {
-      let happiness = toy === "ball" ? 25 : 30;
-      let energyCost = toy === "ball" ? 12 : 8;
-      let hungerIncrease = toy === "ball" ? 8 : 6; // Playing makes cat hungry
+      const happiness = toy === "ball" ? 25 : 30;
+      const energyCost = toy === "ball" ? 12 : 8;
+      const hungerIncrease = toy === "ball" ? 8 : 6; // Playing makes cat hungry
       return {
         ...prev,
         happiness: clamp(prev.happiness + happiness),
