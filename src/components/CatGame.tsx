@@ -345,6 +345,7 @@ const CatGame: React.FC = () => {
   return (
     <div
       className="relative w-full h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui overflow-hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       {/* Background clouds - multiple floating */}
       {bgClouds.map((cloud) => (
@@ -514,7 +515,7 @@ const CatGame: React.FC = () => {
       </div>
 
       {/* Bottom Panel with Stats and Controls */}
-      <div className="w-full bg-white/40 backdrop-blur-sm border-t border-pink-200">
+      <div className="w-full bg-white/40 backdrop-blur-sm border-t border-pink-200 pb-4 sm:pb-6 mb-4 sm:mb-6">
         {/* Stats Display Area */}
         <div className="flex flex-col items-center w-full px-2 sm:px-4 py-1.5 sm:py-2">
           <h2 className="font-pixel text-pink-800 text-[10px] sm:text-xs mb-1 sm:mb-2">Cat Stats</h2>
@@ -568,7 +569,7 @@ const CatGame: React.FC = () => {
         </div>
 
         {/* Action Buttons Area */}
-        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-2 border-t border-pink-200/50">
+        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-2 border-t border-pink-200/50 pb-6 sm:pb-8">
           <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full max-w-md">{/* Feed Button */}
             <button
               className="bg-gradient-to-b from-pink-400 to-pink-500 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
