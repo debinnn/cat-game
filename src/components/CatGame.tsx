@@ -342,20 +342,9 @@ const CatGame: React.FC = () => {
   const foodIcon = "/assets/food_in_bowl.png";
   const energyIcon = "/assets/thunder_bolt.png";
 
-  // Responsive: iPhone 15 viewport
-  // 393x852px
-
   return (
     <div
-      className="relative w-full min-h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui"
-      style={{
-        maxWidth: 393,
-        minHeight: 852,
-        margin: "0 auto",
-        boxShadow: "0 0 32px 0 #F8BBD9",
-        borderRadius: 12,
-        overflow: "hidden",
-      }}
+      className="relative w-full h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui overflow-hidden"
     >
       {/* Background clouds - multiple floating */}
       {bgClouds.map((cloud) => (
@@ -516,120 +505,106 @@ const CatGame: React.FC = () => {
             alt="cat"
             width={260}
             height={260}
-            className={`rounded-kawaii-lg shadow-kawaii transition-all duration-500 hover:scale-105 ${
+            className={`w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 max-w-[80vw] max-h-[40vh] object-contain rounded-kawaii-lg shadow-kawaii transition-all duration-500 hover:scale-105 ${
               showSleep ? 'opacity-80 grayscale-[0.3]' : ''
             }`}
             priority
           />
         </div>
-        
-        {/* Food Bowl - only show when eating */}
-        {eating && (
-          <div className="relative flex flex-col items-center mt-4" style={{ zIndex: 5 }}>
-            <Image
-              src="/assets/food_in_bowl.png"
-              alt="food bowl"
-              width={80}
-              height={50}
-              className="transition-all duration-500"
-            />
-          </div>
-        )}
       </div>
 
       {/* Bottom Panel with Stats and Controls */}
       <div className="w-full bg-white/40 backdrop-blur-sm border-t border-pink-200">
         {/* Stats Display Area */}
-        <div className="flex flex-col items-center w-full px-4 py-2">
-          <h2 className="font-pixel text-pink-800 text-xs mb-2">Cat Stats</h2>
+        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-1.5 sm:py-2">
+          <h2 className="font-pixel text-pink-800 text-[10px] sm:text-xs mb-1 sm:mb-2">Cat Stats</h2>
           
-          <div className="flex flex-row items-center justify-between gap-4 w-full">
+          <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 w-full">
             {/* Happiness */}
             <div className="flex flex-col items-center flex-1">
-              <Image src={heartIcon} alt="happiness" width={18} height={18} />
-              <span className="text-xs font-pixel text-pink-700 mt-1">Happy</span>
-              <div className="w-full h-2 bg-pink-100 rounded-kawaii mt-1 border border-pink-200">
+              <Image src={heartIcon} alt="happiness" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Happy</span>
+              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
                 <div
-                  className="bg-gradient-to-r from-pink-400 to-pink-500 h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-pink-400 to-pink-500 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
                   style={{ width: `${stats.happiness}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-pink-600 mt-1">{Math.round(stats.happiness)}</span>
+              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{Math.round(stats.happiness)}</span>
             </div>
             
             {/* Energy */}
             <div className="flex flex-col items-center flex-1">
-              <Image src={energyIcon} alt="energy" width={18} height={18} />
-              <span className="text-xs font-pixel text-pink-700 mt-1">Energy</span>
-              <div className="w-full h-2 bg-pink-100 rounded-kawaii mt-1 border border-pink-200">
+              <Image src={energyIcon} alt="energy" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Energy</span>
+              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
                 <div
-                  className="bg-gradient-to-r from-rose-gold to-dusty-rose h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-yellow-400 to-orange-400 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
                   style={{ width: `${stats.energy}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-pink-600 mt-1">{Math.round(stats.energy)}</span>
+              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{Math.round(stats.energy)}</span>
             </div>
             
             {/* Hunger (inverted - shows fullness) */}
             <div className="flex flex-col items-center flex-1">
-              <Image src={foodIcon} alt="hunger" width={18} height={18} />
-              <span className="text-xs font-pixel text-pink-700 mt-1">Food</span>
-              <div className="w-full h-2 bg-pink-100 rounded-kawaii mt-1 border border-pink-200">
+              <Image src={foodIcon} alt="hunger" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
+              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Food</span>
+              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
                 <div
-                  className="bg-gradient-to-r from-blush to-pink-300 h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-blush to-pink-300 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
                   style={{ width: `${100 - stats.hunger}%` }}
                 ></div>
               </div>
-              <span className="text-xs text-pink-600 mt-1">{100 - Math.round(stats.hunger)}</span>
+              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{100 - Math.round(stats.hunger)}</span>
             </div>
           </div>
           
           {/* Streaks & Achievement Info */}
-          <div className="flex flex-row items-center justify-center gap-4 mt-1">
-            <span className="text-xs text-pink-700 font-pixel">Day: {stats.dailyStreak}</span>
-            <span className="text-xs text-pink-700 font-pixel">Total: {stats.totalCareDays}</span>
+          <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mt-0.5 sm:mt-1">
+            <span className="text-[8px] sm:text-xs text-pink-700 font-pixel">Day: {stats.dailyStreak}</span>
+            <span className="text-[8px] sm:text-xs text-pink-700 font-pixel">Total: {stats.totalCareDays}</span>
           </div>
         </div>
 
         {/* Action Buttons Area */}
-        <div className="flex flex-col items-center w-full px-4 py-2 border-t border-pink-200/50">
-          <div className="grid grid-cols-4 gap-2 w-full max-w-sm">
-            {/* Feed Button */}
+        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-2 border-t border-pink-200/50">
+          <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full max-w-md">{/* Feed Button */}
             <button
-              className="bg-gradient-to-b from-pink-400 to-pink-500 text-white font-pixel rounded-kawaii shadow-kawaii h-12 text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              className="bg-gradient-to-b from-pink-400 to-pink-500 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
               onClick={handleFeed}
               disabled={eating}
             >
-              <Image src="/assets/food_in_bowl.png" alt="feed" width={16} height={16} />
-              <span className="mt-1">Feed</span>
+              <Image src="/assets/food_in_bowl.png" alt="feed" width={12} height={12} className="sm:w-4 sm:h-4" />
+              <span className="mt-0.5 sm:mt-1">Feed</span>
             </button>
             
             {/* Play Button */}
             <button
-              className="bg-gradient-to-b from-rose-gold to-dusty-rose text-white font-pixel rounded-kawaii shadow-kawaii h-12 text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              className="bg-gradient-to-b from-rose-gold to-dusty-rose text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
               onClick={() => setShowToys(true)}
             >
-              <Image src="/assets/cat_toy_ball.png" alt="play" width={16} height={16} />
-              <span className="mt-1">Play</span>
+              <Image src="/assets/cat_toy_ball.png" alt="play" width={12} height={12} className="sm:w-4 sm:h-4" />
+              <span className="mt-0.5 sm:mt-1">Play</span>
             </button>
             
             {/* Pet Button */}
             <button
-              className="bg-gradient-to-b from-blush to-pink-300 text-white font-pixel rounded-kawaii shadow-kawaii h-12 text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              className="bg-gradient-to-b from-blush to-pink-300 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
               onClick={handlePet}
             >
-              <Image src="/assets/one_heart.png" alt="pet" width={16} height={16} />
-              <span className="mt-1">Pet</span>
+              <Image src="/assets/one_heart.png" alt="pet" width={12} height={12} className="sm:w-4 sm:h-4" />
+              <span className="mt-0.5 sm:mt-1">Pet</span>
             </button>
             
             {/* Sleep Button */}
             <button
-              className="bg-gradient-to-b from-pink-300 to-pink-400 text-white font-pixel rounded-kawaii shadow-kawaii h-12 text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              className="bg-gradient-to-b from-pink-300 to-pink-400 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
               onClick={handleSleep}
               disabled={stats.energy > 40}
             >
-              <Image src="/assets/sleeping_symbol.png" alt="sleep" width={16} height={16} />
-              <span className="mt-1">Sleep</span>
+              <Image src="/assets/sleeping_symbol.png" alt="sleep" width={12} height={12} className="sm:w-4 sm:h-4" />
+              <span className="mt-0.5 sm:mt-1">Sleep</span>
             </button>
           </div>
         </div>
@@ -637,27 +612,27 @@ const CatGame: React.FC = () => {
       
       {/* Toy selection modal */}
       {showToys && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-kawaii-lg p-6 flex flex-col gap-4 items-center shadow-kawaii w-72">
-            <span className="font-pixel text-pink-700 text-lg mb-2">Choose a toy!</span>
-            <div className="flex flex-row gap-6">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-kawaii-lg p-4 sm:p-6 flex flex-col gap-4 items-center shadow-kawaii w-full max-w-xs sm:max-w-sm">
+            <span className="font-pixel text-pink-700 text-sm sm:text-lg mb-2">Choose a toy!</span>
+            <div className="flex flex-row gap-4 sm:gap-6">
               <button
                 className="flex flex-col items-center gap-1 active:scale-95"
                 onClick={() => handlePlay("ball")}
               >
-                <Image src="/assets/cat_toy_ball.png" alt="ball" width={48} height={48} />
-                <span className="font-pixel text-xs text-pink-700">Ball</span>
+                <Image src="/assets/cat_toy_ball.png" alt="ball" width={40} height={40} className="sm:w-12 sm:h-12" />
+                <span className="font-pixel text-[10px] sm:text-xs text-pink-700">Ball</span>
               </button>
               <button
                 className="flex flex-col items-center gap-1 active:scale-95"
                 onClick={() => handlePlay("mouse")}
               >
-                <Image src="/assets/cat_toy_mouse.png" alt="mouse" width={48} height={48} />
-                <span className="font-pixel text-xs text-pink-700">Mouse</span>
+                <Image src="/assets/cat_toy_mouse.png" alt="mouse" width={40} height={40} className="sm:w-12 sm:h-12" />
+                <span className="font-pixel text-[10px] sm:text-xs text-pink-700">Mouse</span>
               </button>
             </div>
             <button
-              className="mt-4 bg-pink-200 text-pink-700 font-pixel rounded-kawaii px-4 py-2 shadow-soft text-sm active:scale-95"
+              className="mt-2 sm:mt-4 bg-pink-200 text-pink-700 font-pixel rounded-kawaii px-3 sm:px-4 py-1.5 sm:py-2 shadow-soft text-xs sm:text-sm active:scale-95"
               onClick={() => setShowToys(false)}
             >
               Cancel
