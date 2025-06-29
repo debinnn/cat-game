@@ -706,16 +706,41 @@ const CatGame: React.FC = () => {
       {/* Name info modal */}
       {showNameInfo && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-kawaii-lg p-4 sm:p-6 flex flex-col gap-4 items-center shadow-kawaii w-full max-w-xs sm:max-w-sm text-center">
+          <div 
+            className="bg-black/80 border border-gray-400 rounded-sm p-4 sm:p-6 flex flex-col gap-4 items-center shadow-lg w-full max-w-xs sm:max-w-sm text-center"
+            style={{
+              backdropFilter: 'blur(4px)'
+            }}
+          >
             <div className="flex flex-col items-center gap-2">
-              <span className="font-pixel text-pink-700 text-sm sm:text-lg">✨ Artemis ✨</span>
-              <div className="text-pink-600 text-xs sm:text-sm">
+              <span 
+                className="text-white text-sm sm:text-lg"
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                ✨ Artemis ✨
+              </span>
+              <div 
+                className="text-gray-200 text-xs sm:text-sm"
+                style={{
+                  fontFamily: 'monospace',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
                 <div className="mb-1">Artemis the goddess of the moon.</div>
-                <div className="text-pink-500 italic">dedicated to my ambili</div>
+                <div className="text-gray-300 italic">dedicated to my ambili</div>
               </div>
             </div>
             <button
-              className="mt-2 bg-pink-200 text-pink-700 font-pixel rounded-kawaii px-3 sm:px-4 py-1.5 sm:py-2 shadow-soft text-xs sm:text-sm active:scale-95"
+              className="mt-2 bg-gray-600 hover:bg-gray-500 text-white border border-gray-400 rounded-sm px-3 sm:px-4 py-1.5 sm:py-2 shadow-sm text-xs sm:text-sm active:scale-95 transition-all duration-200"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
               onClick={() => setShowNameInfo(false)}
             >
               Close
