@@ -82,6 +82,7 @@ const CatGame: React.FC = () => {
   const [showToyNearCat, setShowToyNearCat] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPetting, setIsPetting] = useState(false);
+  const [showNameInfo, setShowNameInfo] = useState(false);
   const [bgClouds] = useState([
     { id: 1, left: "15%", top: "15%", speed: 25 },
     { id: 2, left: "75%", top: "25%", speed: 35 },
@@ -530,7 +531,7 @@ const CatGame: React.FC = () => {
           <div className="relative">
             {/* Nameplate background */}
             <div 
-              className="bg-black/70 px-2 py-0.5 rounded-sm border border-gray-400 shadow-lg"
+              className="bg-black/70 px-2 py-0.5 rounded-sm border border-gray-400 shadow-lg cursor-pointer pointer-events-auto hover:bg-black/80 transition-all duration-200"
               style={{
                 fontFamily: 'monospace',
                 fontSize: '11px',
@@ -538,6 +539,7 @@ const CatGame: React.FC = () => {
                 textShadow: '1px 1px 0px rgba(0,0,0,0.8)',
                 backdropFilter: 'blur(2px)'
               }}
+              onClick={() => setShowNameInfo(true)}
             >
               <span className="text-white">artemis</span>
             </div>
@@ -696,6 +698,27 @@ const CatGame: React.FC = () => {
               onClick={() => setShowToys(false)}
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Name info modal */}
+      {showNameInfo && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-kawaii-lg p-4 sm:p-6 flex flex-col gap-4 items-center shadow-kawaii w-full max-w-xs sm:max-w-sm text-center">
+            <div className="flex flex-col items-center gap-2">
+              <span className="font-pixel text-pink-700 text-sm sm:text-lg">✨ Artemis ✨</span>
+              <div className="text-pink-600 text-xs sm:text-sm">
+                <div className="mb-1">Artemis the goddess of the moon.</div>
+                <div className="text-pink-500 italic">dedicated to my ambili</div>
+              </div>
+            </div>
+            <button
+              className="mt-2 bg-pink-200 text-pink-700 font-pixel rounded-kawaii px-3 sm:px-4 py-1.5 sm:py-2 shadow-soft text-xs sm:text-sm active:scale-95"
+              onClick={() => setShowNameInfo(false)}
+            >
+              Close
             </button>
           </div>
         </div>
