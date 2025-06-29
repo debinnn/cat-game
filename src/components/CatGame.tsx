@@ -378,7 +378,7 @@ const CatGame: React.FC = () => {
       className="relative w-full min-h-screen flex flex-col bg-gradient-to-br from-light-pink via-soft-pink to-pink font-ui"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      {/* Background clouds - multiple floating */}
+      {/* Background clouds - multiple */}
       {bgClouds.map((cloud) => (
         <Image
           key={cloud.id}
@@ -524,6 +524,34 @@ const CatGame: React.FC = () => {
             style={{ zIndex: 8 }}
           />
         )}
+        
+        {/* Minecraft-styled nameplate */}
+        <div className="absolute left-1/2 top-4 -translate-x-1/2 pointer-events-none z-20">
+          <div className="relative">
+            {/* Nameplate background */}
+            <div 
+              className="bg-black/70 px-2 py-0.5 rounded-sm border border-gray-400 shadow-lg"
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <span className="text-white">artemis</span>
+            </div>
+            {/* Small triangle pointer */}
+            <div 
+              className="absolute left-1/2 top-full -translate-x-1/2 w-0 h-0"
+              style={{
+                borderLeft: '3px solid transparent',
+                borderRight: '3px solid transparent',
+                borderTop: '3px solid rgba(0,0,0,0.7)',
+              }}
+            />
+          </div>
+        </div>
         
         {/* Main Cat Sprite */}
         <div
