@@ -38,9 +38,10 @@ const defaultStats: CatStats = {
 const clamp = (v: number, min = 0, max = 100) => Math.max(min, Math.min(max, v));
 
 // Utility: get mood sprite
-function getCatSprite(stats: CatStats, eating: boolean, sleeping: boolean, playing: boolean, petting: boolean): string {
+function getCatSprite(stats: CatStats, eating: boolean, sleeping: boolean, playing: boolean, petting: boolean, running: boolean = false, direction: 'left' | 'right' = 'right', frame: 1 | 2 = 1): string {
   if (eating) return "/assets/cat_eating.png";
   if (sleeping) return "/assets/cat_sitting_comfortable_purring.png";
+  if (running) return `/assets/cat_run_${direction}_${frame}.png`;
   if (playing) return "/assets/cat_very_happy.png"; // Use very happy when playing
   if (petting) return "/assets/cat_sitting_happy.png"; // Use sitting happy when being petted
   if (stats.energy < 20) return "/assets/cat_mild_happy.png"; 
@@ -83,6 +84,12 @@ const CatGame: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPetting, setIsPetting] = useState(false);
   const [showNameInfo, setShowNameInfo] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [toyPosition, setToyPosition] = useState({ x: 0, y: 0 });
+  const [catPosition, setCatPosition] = useState({ x: 0, y: 0 });
+  const [runDirection, setRunDirection] = useState<'left' | 'right'>('right');
+  const [runFrame, setRunFrame] = useState<1 | 2>(1);
+  const [activeToy, setActiveToy] = useState<string | null>(null);
   const [bgClouds] = useState([
     { id: 1, left: "15%", top: "15%", speed: 25 },
     { id: 2, left: "75%", top: "25%", speed: 35 },
@@ -106,6 +113,7 @@ const CatGame: React.FC = () => {
   const sleepTimeout = useRef<NodeJS.Timeout | null>(null);
   const playTimeout = useRef<NodeJS.Timeout | null>(null);
   const petTimeout = useRef<NodeJS.Timeout | null>(null);
+  const runAnimationInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Save stats to localStorage
   useEffect(() => {
@@ -113,6 +121,19 @@ const CatGame: React.FC = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
     }
   }, [stats]);
+
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (eatingTimeout.current) clearTimeout(eatingTimeout.current);
+      if (sparkleTimeout.current) clearTimeout(sparkleTimeout.current);
+      if (heartTimeout.current) clearTimeout(heartTimeout.current);
+      if (sleepTimeout.current) clearTimeout(sleepTimeout.current);
+      if (playTimeout.current) clearTimeout(playTimeout.current);
+      if (petTimeout.current) clearTimeout(petTimeout.current);
+      if (runAnimationInterval.current) clearInterval(runAnimationInterval.current);
+    };
+  }, []);
 
   // Hide mobile browser address bar
   useEffect(() => {
@@ -177,11 +198,11 @@ const CatGame: React.FC = () => {
       ...prev,
       moodHistory: [
         ...prev.moodHistory.slice(-20),
-        { time: Date.now(), mood: getCatSprite(prev, eating, showSleep, isPlaying, isPetting) },
+        { time: Date.now(), mood: getCatSprite(prev, eating, showSleep, isPlaying && !isDragging, isPetting, isPlaying && isDragging, runDirection, runFrame) },
       ],
     }));
     // eslint-disable-next-line
-  }, [stats.hunger, stats.happiness, stats.energy, eating]);
+  }, [stats.hunger, stats.happiness, stats.energy, eating, isPlaying, isDragging, runDirection, runFrame]);
 
   // Random events
   useEffect(() => {
@@ -237,33 +258,103 @@ const CatGame: React.FC = () => {
   // Play - now also reduces hunger
   const handlePlay = (toy: "ball" | "mouse") => {
     setShowToys(false);
-    setShowSparkle(true);
     setIsPlaying(true);
-    setShowToyNearCat(toy === "ball" ? "/assets/cat_toy_ball.png" : "/assets/cat_toy_mouse.png");
+    setActiveToy(toy === "ball" ? "/assets/cat_toy_ball.png" : "/assets/cat_toy_mouse.png");
+    setIsDragging(false);
     
+    // Set initial toy position (center of screen)
+    setToyPosition({ x: 0, y: 0 });
+    setCatPosition({ x: 0, y: 0 });
+    
+    // Start running animation
+    runAnimationInterval.current = setInterval(() => {
+      setRunFrame(prev => prev === 1 ? 2 : 1);
+    }, 300); // Change frame every 300ms
+    
+    setStats((prev) => ({
+      ...prev,
+      lastPlay: Date.now(),
+      lastInteraction: Date.now(),
+      lastToy: toy,
+    }));
+    
+    handleCombo();
+  };
+
+  // Stop playing
+  const handleStopPlaying = () => {
+    setIsPlaying(false);
+    setActiveToy(null);
+    setIsDragging(false);
+    setShowSparkle(false);
+    
+    if (runAnimationInterval.current) {
+      clearInterval(runAnimationInterval.current);
+      runAnimationInterval.current = null;
+    }
+    
+    // Apply final stats when stopping
     setStats((prev) => {
-      const happiness = toy === "ball" ? 25 : 30;
-      const energyCost = toy === "ball" ? 12 : 8;
-      const hungerIncrease = toy === "ball" ? 8 : 6; // Playing makes cat hungry
+      const happiness = prev.lastToy === "ball" ? 25 : 30;
+      const energyCost = prev.lastToy === "ball" ? 12 : 8;
+      const hungerIncrease = prev.lastToy === "ball" ? 8 : 6;
       return {
         ...prev,
         happiness: clamp(prev.happiness + happiness),
         energy: clamp(prev.energy - energyCost),
-        hunger: clamp(prev.hunger + hungerIncrease), // Playing increases hunger
-        lastPlay: Date.now(),
-        lastInteraction: Date.now(),
-        lastToy: toy,
+        hunger: clamp(prev.hunger + hungerIncrease),
       };
     });
+  };
+
+  // Handle toy drag
+  const handleToyDrag = (clientX: number, clientY: number) => {
+    if (!isPlaying || !activeToy) return;
     
-    // Show playing state for 5 seconds
-    playTimeout.current = setTimeout(() => {
-      setIsPlaying(false);
-      setShowToyNearCat(null);
-    }, 5000);
+    // Get the main cat display area bounds
+    const catArea = document.querySelector('[data-cat-area]');
+    if (!catArea) return;
     
-    sparkleTimeout.current = setTimeout(() => setShowSparkle(false), toy === "ball" ? 1200 : 1800);
-    handleCombo();
+    const rect = catArea.getBoundingClientRect();
+    const x = clientX - rect.left - rect.width / 2;
+    const y = clientY - rect.top - rect.height / 2;
+    
+    // Clamp toy position to visible area
+    const clampedX = Math.max(-rect.width / 2 + 50, Math.min(rect.width / 2 - 50, x));
+    const clampedY = Math.max(-rect.height / 2 + 50, Math.min(rect.height / 2 - 50, y));
+    
+    setToyPosition({ x: clampedX, y: clampedY });
+    
+    // Update cat direction based on toy movement
+    const direction = clampedX > catPosition.x ? 'right' : 'left';
+    setRunDirection(direction);
+    
+    // Smoothly move cat towards toy (with some delay/lag)
+    setTimeout(() => {
+      const newCatX = catPosition.x + (clampedX - catPosition.x) * 0.3;
+      const newCatY = catPosition.y + (clampedY - catPosition.y) * 0.3;
+      setCatPosition({ x: newCatX, y: newCatY });
+    }, 200);
+    
+    // Show sparkle effect occasionally
+    if (Math.random() < 0.1) {
+      setShowSparkle(true);
+      setTimeout(() => setShowSparkle(false), 800);
+    }
+  };
+
+  // Mouse/touch handlers for toy dragging
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      handleToyDrag(e.clientX, e.clientY);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (isDragging && e.touches[0]) {
+      e.preventDefault();
+      handleToyDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }
   };
 
   // Pet - creates multiple hearts around the cat
@@ -369,7 +460,7 @@ const CatGame: React.FC = () => {
   };
 
   // UI rendering
-  const catSprite = getCatSprite(stats, eating, showSleep, isPlaying, isPetting);
+  const catSprite = getCatSprite(stats, eating, showSleep, isPlaying && !isDragging, isPetting, isPlaying && isDragging, runDirection, runFrame);
   const heartIcon = getHeartIcon(stats.happiness);
   const foodIcon = "/assets/food_in_bowl.png";
   const energyIcon = "/assets/thunder_bolt.png";
@@ -437,7 +528,14 @@ const CatGame: React.FC = () => {
       ))}
 
       {/* Main Cat Display Area - Top 75% */}
-      <div className="relative flex flex-col items-center justify-center w-full px-4 flex-1">
+      <div 
+        className="relative flex flex-col items-center justify-center w-full px-4 flex-1"
+        data-cat-area
+        onMouseMove={handleMouseMove}
+        onTouchMove={handleTouchMove}
+        onMouseUp={() => setIsDragging(false)}
+        onTouchEnd={() => setIsDragging(false)}
+      >
         {/* Sparkle effect */}
         {showSparkle && (
           <Image
@@ -525,6 +623,53 @@ const CatGame: React.FC = () => {
             style={{ zIndex: 8 }}
           />
         )}
+
+        {/* Draggable toy when playing */}
+        {isPlaying && activeToy && (
+          <div
+            className="absolute left-1/2 top-1/2 cursor-grab active:cursor-grabbing z-15"
+            style={{
+              transform: `translate(calc(-50% + ${toyPosition.x}px), calc(-50% + ${toyPosition.y}px))`,
+              userSelect: 'none'
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+          >
+            <Image
+              src={activeToy}
+              alt="toy"
+              width={50}
+              height={50}
+              className="pointer-events-none"
+              draggable={false}
+            />
+          </div>
+        )}
+
+        {/* Stop playing button */}
+        {isPlaying && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20">
+            <button
+              className="bg-black/70 hover:bg-black/80 text-white border border-gray-400 rounded-sm px-3 py-1.5 shadow-lg transition-all duration-200 active:scale-95"
+              style={{
+                fontFamily: 'monospace',
+                fontSize: '11px',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)',
+                backdropFilter: 'blur(2px)'
+              }}
+              onClick={handleStopPlaying}
+            >
+              Stop Playing
+            </button>
+          </div>
+        )}
         
         {/* Minecraft-styled nameplate */}
         <div className="absolute left-1/2 top-4 -translate-x-1/2 pointer-events-none z-20">
@@ -558,6 +703,10 @@ const CatGame: React.FC = () => {
         {/* Main Cat Sprite */}
         <div
           className="relative z-10 cursor-pointer select-none"
+          style={{
+            transform: isPlaying ? `translate(${catPosition.x}px, ${catPosition.y}px)` : 'none',
+            transition: isPlaying ? 'transform 0.3s ease-out' : 'none'
+          }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onClick={handlePet}
@@ -576,64 +725,145 @@ const CatGame: React.FC = () => {
       </div>
 
       {/* Bottom Panel with Stats and Controls */}
-      <div className="w-full bg-white/40 backdrop-blur-sm border-t border-pink-200">
+      <div className="w-full bg-black/70 backdrop-blur-sm border-t border-gray-400">
         {/* Stats Display Area */}
         <div className="flex flex-col items-center w-full px-2 sm:px-4 py-1.5 sm:py-2">
-          <h2 className="font-pixel text-pink-800 text-[10px] sm:text-xs mb-1 sm:mb-2">Cat Stats</h2>
+          <h2 
+            className="text-white text-[10px] sm:text-xs mb-1 sm:mb-2"
+            style={{
+              fontFamily: 'monospace',
+              fontWeight: 'bold',
+              textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+            }}
+          >
+            Cat Stats
+          </h2>
           
           <div className="flex flex-row items-center justify-between gap-2 sm:gap-4 w-full">
             {/* Happiness */}
             <div className="flex flex-col items-center flex-1">
               <Image src={heartIcon} alt="happiness" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
-              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Happy</span>
-              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
+              <span 
+                className="text-gray-200 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                Happy
+              </span>
+              <div className="w-full h-1.5 sm:h-2 bg-gray-600 rounded-sm mt-0.5 sm:mt-1 border border-gray-500">
                 <div
-                  className="bg-gradient-to-r from-pink-400 to-pink-500 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-pink-400 to-pink-500 h-1.5 sm:h-2 rounded-sm transition-all duration-500"
                   style={{ width: `${stats.happiness}%` }}
                 ></div>
               </div>
-              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{Math.round(stats.happiness)}</span>
+              <span 
+                className="text-gray-300 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                {Math.round(stats.happiness)}
+              </span>
             </div>
             
             {/* Energy */}
             <div className="flex flex-col items-center flex-1">
               <Image src={energyIcon} alt="energy" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
-              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Energy</span>
-              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
+              <span 
+                className="text-gray-200 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                Energy
+              </span>
+              <div className="w-full h-1.5 sm:h-2 bg-gray-600 rounded-sm mt-0.5 sm:mt-1 border border-gray-500">
                 <div
-                  className="bg-gradient-to-r from-yellow-400 to-orange-400 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-yellow-400 to-orange-400 h-1.5 sm:h-2 rounded-sm transition-all duration-500"
                   style={{ width: `${stats.energy}%` }}
                 ></div>
               </div>
-              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{Math.round(stats.energy)}</span>
+              <span 
+                className="text-gray-300 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                {Math.round(stats.energy)}
+              </span>
             </div>
             
             {/* Hunger (inverted - shows fullness) */}
             <div className="flex flex-col items-center flex-1">
               <Image src={foodIcon} alt="hunger" width={14} height={14} className="sm:w-[18px] sm:h-[18px]" />
-              <span className="text-[8px] sm:text-xs font-pixel text-pink-700 mt-0.5 sm:mt-1">Food</span>
-              <div className="w-full h-1.5 sm:h-2 bg-pink-100 rounded-kawaii mt-0.5 sm:mt-1 border border-pink-200">
+              <span 
+                className="text-gray-200 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  fontWeight: 'bold',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                Food
+              </span>
+              <div className="w-full h-1.5 sm:h-2 bg-gray-600 rounded-sm mt-0.5 sm:mt-1 border border-gray-500">
                 <div
-                  className="bg-gradient-to-r from-blush to-pink-300 h-1.5 sm:h-2 rounded-kawaii transition-all duration-500"
+                  className="bg-gradient-to-r from-green-400 to-green-500 h-1.5 sm:h-2 rounded-sm transition-all duration-500"
                   style={{ width: `${100 - stats.hunger}%` }}
                 ></div>
               </div>
-              <span className="text-[8px] sm:text-xs text-pink-600 mt-0.5 sm:mt-1">{100 - Math.round(stats.hunger)}</span>
+              <span 
+                className="text-gray-300 text-[8px] sm:text-xs mt-0.5 sm:mt-1"
+                style={{
+                  fontFamily: 'monospace',
+                  textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+                }}
+              >
+                {100 - Math.round(stats.hunger)}
+              </span>
             </div>
           </div>
           
           {/* Streaks & Achievement Info */}
           <div className="flex flex-row items-center justify-center gap-2 sm:gap-4 mt-0.5 sm:mt-1">
-            <span className="text-[8px] sm:text-xs text-pink-700 font-pixel">Day: {stats.dailyStreak}</span>
-            <span className="text-[8px] sm:text-xs text-pink-700 font-pixel">Total: {stats.totalCareDays}</span>
+            <span 
+              className="text-gray-300 text-[8px] sm:text-xs"
+              style={{
+                fontFamily: 'monospace',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
+            >
+              Day: {stats.dailyStreak}
+            </span>
+            <span 
+              className="text-gray-300 text-[8px] sm:text-xs"
+              style={{
+                fontFamily: 'monospace',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
+            >
+              Total: {stats.totalCareDays}
+            </span>
           </div>
         </div>
 
         {/* Action Buttons Area */}
-        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-2 border-t border-pink-200/50 pb-20">
+        <div className="flex flex-col items-center w-full px-2 sm:px-4 py-2 border-t border-gray-500/50 pb-20">
           <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full max-w-md">{/* Feed Button */}
             <button
-              className="bg-gradient-to-b from-pink-400 to-pink-500 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              className="bg-gray-700 hover:bg-gray-600 text-white border border-gray-500 rounded-sm shadow-lg h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
               onClick={handleFeed}
               disabled={eating}
             >
@@ -643,7 +873,12 @@ const CatGame: React.FC = () => {
             
             {/* Play Button */}
             <button
-              className="bg-gradient-to-b from-rose-gold to-dusty-rose text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              className="bg-gray-700 hover:bg-gray-600 text-white border border-gray-500 rounded-sm shadow-lg h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
               onClick={() => setShowToys(true)}
             >
               <Image src="/assets/cat_toy_ball.png" alt="play" width={12} height={12} className="sm:w-4 sm:h-4" />
@@ -652,7 +887,12 @@ const CatGame: React.FC = () => {
             
             {/* Pet Button */}
             <button
-              className="bg-gradient-to-b from-blush to-pink-300 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              className="bg-gray-700 hover:bg-gray-600 text-white border border-gray-500 rounded-sm shadow-lg h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
               onClick={handlePet}
             >
               <Image src="/assets/one_heart.png" alt="pet" width={12} height={12} className="sm:w-4 sm:h-4" />
@@ -661,7 +901,12 @@ const CatGame: React.FC = () => {
             
             {/* Sleep Button */}
             <button
-              className="bg-gradient-to-b from-pink-300 to-pink-400 text-white font-pixel rounded-kawaii shadow-kawaii h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              className="bg-gray-700 hover:bg-gray-600 text-white border border-gray-500 rounded-sm shadow-lg h-10 sm:h-12 text-[8px] sm:text-xs active:scale-95 transition-all flex flex-col items-center justify-center disabled:opacity-50"
+              style={{
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                textShadow: '1px 1px 0px rgba(0,0,0,0.8)'
+              }}
               onClick={handleSleep}
               disabled={stats.energy > 40}
             >
