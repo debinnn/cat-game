@@ -80,7 +80,6 @@ const CatGame: React.FC = () => {
   const [showHearts, setShowHearts] = useState(false);
   const [petHearts, setPetHearts] = useState<Array<{id: number, x: number, y: number, type: 'asset' | 'emoji', delay: number}>>([]);
   const [showSleep, setShowSleep] = useState(false);
-  const [showToyNearCat, setShowToyNearCat] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPetting, setIsPetting] = useState(false);
   const [showNameInfo, setShowNameInfo] = useState(false);
@@ -125,13 +124,21 @@ const CatGame: React.FC = () => {
   // Clean up timeouts on unmount
   useEffect(() => {
     return () => {
-      if (eatingTimeout.current) clearTimeout(eatingTimeout.current);
-      if (sparkleTimeout.current) clearTimeout(sparkleTimeout.current);
-      if (heartTimeout.current) clearTimeout(heartTimeout.current);
-      if (sleepTimeout.current) clearTimeout(sleepTimeout.current);
-      if (playTimeout.current) clearTimeout(playTimeout.current);
-      if (petTimeout.current) clearTimeout(petTimeout.current);
-      if (runAnimationInterval.current) clearInterval(runAnimationInterval.current);
+      const eatingTimeoutRef = eatingTimeout.current;
+      const sparkleTimeoutRef = sparkleTimeout.current;
+      const heartTimeoutRef = heartTimeout.current;
+      const sleepTimeoutRef = sleepTimeout.current;
+      const playTimeoutRef = playTimeout.current;
+      const petTimeoutRef = petTimeout.current;
+      const runAnimationIntervalRef = runAnimationInterval.current;
+      
+      if (eatingTimeoutRef) clearTimeout(eatingTimeoutRef);
+      if (sparkleTimeoutRef) clearTimeout(sparkleTimeoutRef);
+      if (heartTimeoutRef) clearTimeout(heartTimeoutRef);
+      if (sleepTimeoutRef) clearTimeout(sleepTimeoutRef);
+      if (playTimeoutRef) clearTimeout(playTimeoutRef);
+      if (petTimeoutRef) clearTimeout(petTimeoutRef);
+      if (runAnimationIntervalRef) clearInterval(runAnimationIntervalRef);
     };
   }, []);
 
@@ -610,18 +617,6 @@ const CatGame: React.FC = () => {
               </div>
             )}
           </div>
-        )}
-
-        {/* Toy near cat when playing */}
-        {showToyNearCat && (
-          <Image
-            src={showToyNearCat}
-            alt="toy"
-            width={60}
-            height={60}
-            className="absolute left-3/4 top-1/2 -translate-y-1/2 animate-bounce pointer-events-none"
-            style={{ zIndex: 8 }}
-          />
         )}
 
         {/* Draggable toy when playing */}
